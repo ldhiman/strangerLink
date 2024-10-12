@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StrangerLink Video Call</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      .video-container {
+        aspect-ratio: 16 / 9;
+      }
+      #chatContainer {
+        height: 300px;
+        overflow-y: auto;
+      }
+      .hidden {
+        display: none;
+      }
+      .gradient-bg {
+        background: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);
+      }
+      .bubble {
+        position: relative;
+        background: #f3f4f6;
+        border-radius: 0.4em;
+        padding: 10px;
+        margin-bottom: 10px;
+      }
+      .bubble:after {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        width: 0;
+        height: 0;
+        border: 20px solid transparent;
+        border-right-color: #f3f4f6;
+        border-left: 0;
+        margin-top: -20px;
+        margin-left: -20px;
+      }
+      .animate-pulse {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 min-h-screen font-sans">
+    <div id="app" class="container mx-auto px-4 py-8">
+      <div id="permissionScreen" class="text-center py-12">
+        <h1 class="text-5xl font-extrabold text-center mb-8 text-indigo-600">
+          StrangerLink <span class="text-green-500">Video Call</span>
+        </h1>
+        <p class="text-xl text-gray-700 mb-6">
+          Connect with strangers from around the world!
+        </p>
+        <div class="bg-white rounded-lg shadow-lg p-8 max-w-md mx-auto">
+          <input
+            id="userName"
+            type="text"
+            class="border border-gray-300 p-3 rounded-lg w-full mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            placeholder="Enter your name"
+          />
+          <select
+            id="userGender"
+            class="border border-gray-300 p-3 rounded-lg w-full mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <option value="" disabled selected>Select your gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
+          <p class="text-lg text-gray-700 mb-4">
+            StrangerLink needs access to your camera and microphone to enable
+            video calling.
+          </p>
+          <button
+            id="requestPermissionBtn"
+            class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-6 rounded-full transition duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
+          >
+            <i class="fas fa-video mr-2"></i> Allow Access
+          </button>
+        </div>
+      </div>
+
+      <div id="mainContent" class="hidden">
+        <h1 class="text-5xl font-extrabold text-center mb-8 text-indigo-600">
+          StrangerLink <span class="text-green-500">Video Call</span>
+        </h1>
+
+        <div id="matchmakingControls" class="text-center mb-8">
+          <button
+            id="startMatchmakingBtn"
+            class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-full transition duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 mr-4"
+          >
+            <i class="fas fa-random mr-2"></i> Start Matchmaking
+          </button>
+          <button
+            id="nextMatchBtn"
+            class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded-full transition duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50 mr-4 hidden"
+          >
+            <i class="fas fa-forward mr-2"></i> Next Match
+          </button>
+          <button
+            id="stopMatchmakingBtn"
+            class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-full transition duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 hidden"
+          >
+            <i class="fas fa-stop mr-2"></i> Stop Matchmaking
+          </button>
+        </div>
+
+        <div id="waitingScreen" class="hidden text-center py-12">
+          <div
+            class="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-indigo-600 mx-auto mb-8"
+          ></div>
+          <p class="text-2xl text-gray-700 animate-pulse">
+            Finding your perfect match...
+          </p>
+        </div>
+
+        <div id="callScreen" class="hidden">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+              <div class="bg-indigo-100 text-indigo-800 py-2 px-4">
+                <h2 class="text-xl font-semibold">You</h2>
+              </div>
+              <div class="video-container bg-gray-200">
+                <video
+                  id="localVideo"
+                  class="w-full h-full object-cover"
+                  autoplay
+                  muted
+                  playsinline
+                ></video>
+              </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+              <div class="bg-green-100 text-green-800 py-2 px-4">
+                <h2 id="strangerName" class="text-xl font-semibold">
+                  Stranger
+                </h2>
+              </div>
+              <div class="video-container bg-gray-200">
+                <video
+                  id="remoteVideo"
+                  class="w-full h-full object-cover"
+                  autoplay
+                  playsinline
+                ></video>
+              </div>
+            </div>
+          </div>
+          <div class="text-center mb-8 space-x-4">
+            <button
+              id="muteBtn"
+              class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded-full transition duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50"
+            >
+              <i class="fas fa-microphone-slash mr-2"></i> Mute
+            </button>
+            <button
+              id="videoBtn"
+              class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-full transition duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            >
+              <i class="fas fa-video-slash mr-2"></i> Turn Off Video
+            </button>
+            <button
+              id="endCallBtn"
+              class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-full transition duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+            >
+              <i class="fas fa-phone-slash mr-2"></i> End Call
+            </button>
+          </div>
+          <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Chat</h2>
+            <div id="chatContainer" class="bg-gray-100 mb-4 p-4 rounded-lg">
+              <div id="messages"></div>
+            </div>
+            <div class="flex">
+              <input
+                id="chatInput"
+                type="text"
+                class="flex-grow border border-gray-300 p-3 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="Type a message..."
+              />
+              <button
+                id="sendMessageBtn"
+                class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-6 rounded-r-lg transition duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
+              >
+                <i class="fas fa-paper-plane"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/index.js"></script>
+  </body>
+</html>
